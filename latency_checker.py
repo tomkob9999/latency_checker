@@ -1,6 +1,6 @@
 # Latency Checker
 # Author: Tomio Kobayashi
-# Version 2.0.2
+# Version 2.0.3
 # Updated: 2024/03/08
     
 import numpy as np
@@ -13,7 +13,9 @@ import requests
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from scipy import stats as statss
-
+import matplotlib.pyplot as plt
+import seaborn as sns
+import pandas as pd
 
 class latency_checker:
     
@@ -21,8 +23,13 @@ class latency_checker:
         
         z_scores = np.abs(statss.zscore(np.array([np.array(row) for row in data])))
 #         print("z_scores", z_scores)
+        threshold = 3
         outlier_indices = np.where(z_scores > threshold)[0]
+    
 #         print("outlier_indices", outlier_indices)
+#         plt.figure(figsize=(10, 6))
+#         sns.scatterplot(data=pdata, x=iris.feature_names[0], y=iris.feature_names[1], hue='species', style='species', palette='bright')
+#         print("data", data)
 
         if len(outlier_indices) > 0:
             print("*")
@@ -87,6 +94,16 @@ class latency_checker:
 #             print("predictions", predictions)
             r2 = r2_score(Y_train, predictions)
             print("  R2:", round(r2, 5))
+        
+#             print("cols", cols)
+            for i in range(len(cols)):
+#                 print("i", i)
+                pdata = [[row[i], row[-1]] for row in data]
+                df = pd.DataFrame(pdata, columns=[cols[i], colY])
+                plt.title("Scatter Plot of " + cols[i] + " and " + colY)
+                plt.scatter(data=df, x=cols[i], y=colY)
+                plt.figure(figsize=(3, 2))
+                plt.show()
                 
             return [r2, model.coef_, model.intercept_], None
         
@@ -98,7 +115,6 @@ class latency_checker:
             coefficients = np.polyfit(X_train, Y_train, degree)
             # Create a polynomial from the coefficients
             polynomial = np.poly1d(coefficients)
-
             predictions = np.polyval(coefficients, X_train)
             
             r2 = r2_score(Y_train, predictions)
@@ -108,20 +124,44 @@ class latency_checker:
             else:
                 # Generate the polynomial equation as a string
                 equation_terms = []
+                
+                # Equation parameters
+                mm = 0
+                m = 0  # slope
+                b = 0  # y-intercept
                 for i, coeff in enumerate(polynomial.coeffs):
                     degree = polynomial.order - i
                     if degree > 1:
                         equation_terms.append(f"{coeff:.3f}x^{degree}")
+                        mm = coeff
                     elif degree == 1:
                         equation_terms.append(f"{coeff:.3f}x")
+                        m = coeff
                     else:
                         equation_terms.append(f"{coeff:.3f}")
+                        b = coeff
+                        
                 polynomial_equation = " + ".join(equation_terms).replace("+ -", "- ")
 #                 print("polynomial_equation", polynomial_equation)
                 print(f"{colY} is related to {colX} by equation of [{polynomial_equation}] with confidence level (R2) of {r2*100:.2f}%")
+    
+                pdata = [[row[0], row[-1]] for row in data]
+                df = pd.DataFrame(pdata, columns=[colX, colY])
+                plt.title("Scatter Plot of " + colX + " and " + colY)
+    #             sns.scatterplot(data=df, x=colX, y=colY)
+                plt.scatter(data=df, x=colX, y=colY)
+                # Generate x values for the line
+                x_line = np.linspace(min(X_train), max(X_train), 10000)  # 100 points from min to max of scatter data
+                # Calculate y values based on the equation of the line
+                y_line = [mm*x**2 + x * m + b for x in x_line]
+                # Plot the line
+                plt.plot(x_line, y_line, color='red', label='Line: ' + polynomial_equation)
+                plt.figure(figsize=(3, 2))
+                plt.show()
+
                 return [r2, polynomial.coeffs], None
     
-
+        
     # Function to perform a request and measure latency
     def make_request(url, data):
         start_time = time.time()
@@ -187,12 +227,14 @@ class latency_checker:
         else:
             if len(num_conreqs) > 1:
                     dd = [[d[0], d[2]] for d in stats if d[1] == mid_inp_size]
+#                     print("dd", dd)
             #         latency_checker.find_relations(dd, "Number of Requests", "Latency in secs", const_thresh=const_thresh)
                     latency_checker.find_relations(dd, "NUMBER OF CONCURRENT REQUESTS", "Latency in secs", const_thresh=const_thresh, skip_inverse=skip_inverse, use_lasso=use_lasso)
             else:
                 print("Not enough samples for NUMBER OF CONCURRENT REQUESTS")
             if len(inp_sizes) > 1:
                 dd = [[d[1], d[2]] for d in stats if d[0] == mid_num_conreq]
+#                 print("dd", dd)
         #         latency_checker.find_relations(dd, "Input Size", "Latency in secs", const_thresh=const_thresh)
                 latency_checker.find_relations(dd, "INPUT SIZE", "Latency in secs", const_thresh=const_thresh, use_lasso=use_lasso)
             else:
