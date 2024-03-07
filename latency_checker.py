@@ -1,7 +1,7 @@
 # Latency Checker
 # Author: Tomio Kobayashi
-# Version 2.0.1
-# Updated: 2024/03/07
+# Version 2.0.2
+# Updated: 2024/03/08
     
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -12,11 +12,25 @@ from sklearn.linear_model import Lasso
 import requests
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from scipy import stats as statss
+
 
 class latency_checker:
     
     def find_relations(data, colX, colY, cols=[], const_thresh=0.1, skip_inverse=True, use_lasso=False):
-            
+        
+        z_scores = np.abs(statss.zscore(np.array([np.array(row) for row in data])))
+#         print("z_scores", z_scores)
+        outlier_indices = np.where(z_scores > threshold)[0]
+#         print("outlier_indices", outlier_indices)
+
+        if len(outlier_indices) > 0:
+            print("*")
+            print(f"OUTLIER FOUND at: {outlier_indices}")
+            for i in outlier_indices:
+                print(data[i])
+            print("*")
+
         if use_lasso:
             dic_relation = {
                 0: ("P", "Proportional Linearly (Y=a*X)"),
@@ -65,6 +79,7 @@ class latency_checker:
             print("  Intersect:", model.intercept_)
 #             print("  Coeffeicients:", model.coef_)
             print("  Coeffeicients:")
+    
             for i, c in enumerate(model.coef_):
                 if np.abs(c) > 0.0000001:
                     print("    ", cols[int(i/num_incs)] if len(cols) > 0 else "    Col" + str(int(i/num_incs)), ":", dic_relation[i%num_incs][1], round(c, 10))
@@ -184,14 +199,3 @@ class latency_checker:
                 print("Not enough samples for INPUT SIZE")
     
         return stats
-
-url = "http://example.com/api"  # Endpoint you are testing
-# url = "http://yahoo.co.jp"  # Endpoint you are testing
-# num_conreqs = [1, 2, 3]
-num_conreqs = [1]
-# maxsize = 10000
-# inp_sizes = [i for i in range(1, maxsize, int(maxsize/20))]
-# stats = latency_checker.measure(url, num_conreqs, inp_sizes, const_thresh=0.0001, unit_M=False)
-maxsize = 5
-inp_sizes = [i for i in range(1, maxsize, int(maxsize/5))]
-stats = latency_checker.measure(url, num_conreqs, inp_sizes, const_thresh=0.00001, unit_M=True, skip_inverse=True, silent=True, use_lasso=True)
