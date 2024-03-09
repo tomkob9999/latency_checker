@@ -178,8 +178,8 @@ class relation_finder:
                     print(f"Intercept: {a:.5f}")
                     print(f"Slope (original scale): {c/div:.5f}")
                     print(f"Exponential Factor: {b:.5f}")
-                    equation = f"y = ({a:.5f}+{c:.5f}*x) * e**({b:.5f}*x)"
-                    print(f"Equation (slope scaled by {div}):", equation)
+                    equation = f"y = ({a:.5f}+{c:.5f}*(x/{div}))) * e**({b:.5f}*(x/{div}))"
+                    print(f"Equation (x de-scaled by {div}):", equation)
 #                 pdata = [[row[0], row[-1]] for row in data]
                 pdata = [[x, Y_train[i]] for i, x in enumerate(X_train)]
 #                 print("pdata", pdata)
