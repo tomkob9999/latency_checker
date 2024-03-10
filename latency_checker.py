@@ -2,22 +2,8 @@
 # Author: Tomio Kobayashi
 # Version 2.0.8
 # Updated: 2024/03/10
-    
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from sklearn.linear_model import Lasso
 
 import requests
-import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from scipy import stats as statss
-import matplotlib.pyplot as plt
-# import seaborn as sns
-import pandas as pd
-import sympy as sp
-from scipy.optimize import curve_fit
             
 class latency_checker:
         
@@ -83,7 +69,7 @@ class latency_checker:
         mid_inp_size=inp_sizes[int(len(inp_sizes)/2)]  if len(inp_sizes) > 2 else inp_sizes[0]
 
         if use_lasso:
-            latency_checker.find_relations(stats, "", "Latency in secs", cols=["NUMBER OF CONCURRENT REQUESTS", "INPUT SIZE"], const_thresh=const_thresh, skip_inverse=skip_inverse, use_lasso=use_lasso)
+            relation_finder.find_relations(stats, "", "Latency in secs", cols=["NUMBER OF CONCURRENT REQUESTS", "INPUT SIZE"], const_thresh=const_thresh, skip_inverse=skip_inverse, use_lasso=use_lasso)
         else:
             if len(num_conreqs) > 1:
                     dd = [[d[0], d[2]] for d in stats if d[1] == mid_inp_size]
