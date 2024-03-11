@@ -1,7 +1,7 @@
 # Latency Checker
 # Author: Tomio Kobayashi
-# Version 2.0.8
-# Updated: 2024/03/10
+# Version 2.0.9
+# Updated: 2024/03/12
 
 import requests
             
@@ -60,7 +60,7 @@ class latency_checker:
                 res.append([num_req, inp_size, latency_checker.measure_latency_concurrent(url, num_req, inp_size, unit_M=unit_M, func=func, silent=silent)])
         return res
     
-    def measure(url, num_conreqs, inp_sizes, const_thresh=0.1, unit_M=False, use_lasso=False, skip_inverse=True, func=None, use_gaussian=False, silent=True):
+    def measure(url, num_conreqs, inp_sizes, const_thresh=0.1, unit_M=False, use_lasso=False, skip_inverse=True, func=None, silent=True):
         print("")
         print("Measuring relations to latency in accessing", url, "...")
         stats = latency_checker.take_averages(url, num_conreqs, inp_sizes, unit_M=unit_M, func=func, silent=silent)
@@ -73,12 +73,12 @@ class latency_checker:
         else:
             if len(num_conreqs) > 1:
                 dd = [[d[0], d[2]] for d in stats if d[1] == mid_inp_size]
-                relation_finder.find_relations(dd, "NUMBER OF CONCURRENT REQUESTS", "Latency in secs", const_thresh=const_thresh, skip_inverse=skip_inverse, use_gaussian=use_gaussian, use_lasso=use_lasso)
+                relation_finder.find_relations(dd, "NUMBER OF CONCURRENT REQUESTS", "Latency in secs", const_thresh=const_thresh, skip_inverse=skip_inverse, use_lasso=use_lasso)
             else:
                 print("Not enough samples for NUMBER OF CONCURRENT REQUESTS")
             if len(inp_sizes) > 1:
                 dd = [[d[1], d[2]] for d in stats if d[0] == mid_num_conreq]
-                relation_finder.find_relations(dd, "INPUT SIZE", "Latency in secs", const_thresh=const_thresh, use_gaussian=use_gaussian, use_lasso=use_lasso)
+                relation_finder.find_relations(dd, "INPUT SIZE", "Latency in secs", const_thresh=const_thresh, use_lasso=use_lasso)
             else:
                 print("Not enough samples for INPUT SIZE")
     
