@@ -1,11 +1,14 @@
 # Latency Checker
 # Author: Tomio Kobayashi
-# Version 2.0.9
+# Version 2.1.1
 # Updated: 2024/03/12
 
 import requests
             
 class latency_checker:
+    
+    def __init__(self):
+        self.finder = relation_finder()
         
     # Function to perform a request and measure latency
     def make_request(url, data, func=None):
@@ -60,26 +63,30 @@ class latency_checker:
                 res.append([num_req, inp_size, latency_checker.measure_latency_concurrent(url, num_req, inp_size, unit_M=unit_M, func=func, silent=silent)])
         return res
     
-    def measure(url, num_conreqs, inp_sizes, const_thresh=0.1, unit_M=False, use_lasso=False, skip_inverse=True, func=None, silent=True):
+    def measure(self, url, num_conreqs, inp_sizes, const_thresh=0.1, unit_M=False, use_lasso=False, skip_inverse=True, func=None, silent=True):
         print("")
         print("Measuring relations to latency in accessing", url, "...")
         stats = latency_checker.take_averages(url, num_conreqs, inp_sizes, unit_M=unit_M, func=func, silent=silent)
 
+#         print("stats", stats)
         mid_num_conreq=num_conreqs[int(len(num_conreqs)/2)] if len(num_conreqs) > 2 else num_conreqs[0]
         mid_inp_size=inp_sizes[int(len(inp_sizes)/2)]  if len(inp_sizes) > 2 else inp_sizes[0]
 
         if use_lasso:
-            relation_finder.find_relations(stats, "", "Latency in secs", cols=["NUMBER OF CONCURRENT REQUESTS", "INPUT SIZE"], const_thresh=const_thresh, skip_inverse=skip_inverse, use_lasso=use_lasso)
+            self.finder.find_relations2(stats, "", "Latency in secs", cols=["NUMBER OF CONCURRENT REQUESTS", "INPUT SIZE"], const_thresh=const_thresh, skip_inverse=skip_inverse, use_lasso=use_lasso)
         else:
             if len(num_conreqs) > 1:
                 dd = [[d[0], d[2]] for d in stats if d[1] == mid_inp_size]
-                relation_finder.find_relations(dd, "NUMBER OF CONCURRENT REQUESTS", "Latency in secs", const_thresh=const_thresh, skip_inverse=skip_inverse, use_lasso=use_lasso)
+                self.finder.find_relations2(dd, "NUMBER OF CONCURRENT REQUESTS", "Latency in secs", const_thresh=const_thresh, skip_inverse=skip_inverse, use_lasso=use_lasso)
             else:
                 print("Not enough samples for NUMBER OF CONCURRENT REQUESTS")
             if len(inp_sizes) > 1:
                 dd = [[d[1], d[2]] for d in stats if d[0] == mid_num_conreq]
-                relation_finder.find_relations(dd, "INPUT SIZE", "Latency in secs", const_thresh=const_thresh, use_lasso=use_lasso)
+                self.finder.find_relations2(dd, "INPUT SIZE", "Latency in secs", const_thresh=const_thresh, use_lasso=use_lasso)
             else:
                 print("Not enough samples for INPUT SIZE")
     
         return stats
+    
+    def predict(self, x):
+        return self.finder.predict(x)
